@@ -445,6 +445,9 @@ struct negotiatedata {
 struct ConnectBits {
   bool tcpconnect[2]; /* the TCP layer (or similar) is connected, this is set
                          the first time on the first connect function call */
+  BIT(passwd_lmhash);  /* do we LM password hash for this connection? */
+  BIT(passwd_nthash);  /* do we NT password hash for this connection? */
+  BIT(passwd_lmv2hash);  /* do we LMv2 password hash for this connection? */
 #ifndef CURL_DISABLE_PROXY
   bool proxy_ssl_connected[2]; /* TRUE when SSL initialization for HTTPS proxy
                                   is complete */
@@ -981,6 +984,10 @@ struct connectdata {
   char *user;    /* user name string, allocated */
   char *passwd;  /* password string, allocated */
   char *options; /* options string, allocated */
+
+  char *passwd_lmhash;	 /* LM hash of password */
+  char *passwd_nthash;	 /* NT hash of password */
+  char *passwd_lmv2hash; /* LMv2 hash of password */
 
   char *sasl_authzid;     /* authorisation identity string, allocated */
 
@@ -1589,6 +1596,10 @@ enum dupstring {
   /* -- below this are pointers to binary data that cannot be strdup'ed. --- */
 
   STRING_COPYPOSTFIELDS,  /* if POST, set the fields' values here */
+
+  STRING_PWD_LMHASH,    /* LM hash of password */
+  STRING_PWD_NTHASH,    /* NT hash of password */
+  STRING_PWD_LMV2HASH,  /* LMv2 hash of password */
 
   STRING_AWS_SIGV4, /* Parameters for V4 signature */
 

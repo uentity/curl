@@ -1409,6 +1409,30 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
                                &data->set.str[STRING_PASSWORD]);
     break;
 
+  case CURLOPT_PWD_LMHASH:
+	  /*
+	  * LM hash of password for ntlm auth
+	  */
+	  result = Curl_setstropt(&data->set.str[STRING_PWD_LMHASH],
+                              va_arg(param, char *));
+	  break;
+
+  case CURLOPT_PWD_NTHASH:
+	  /*
+	  * NT hash of password for ntlm auth
+	  */
+	  result = Curl_setstropt(&data->set.str[STRING_PWD_NTHASH],
+                              va_arg(param, char *));
+	  break;
+
+  case CURLOPT_PWD_LMV2HASH:
+	  /*
+	  * LMv2 hash of password for ntlm auth
+	  */
+	  result = Curl_setstropt(&data->set.str[STRING_PWD_LMV2HASH],
+                              va_arg(param, char *));
+	  break;
+
   case CURLOPT_USERNAME:
     /*
      * authentication user name to use in the operation

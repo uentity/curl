@@ -1993,6 +1993,16 @@ typedef enum {
   /* Function that will be called before a resolver request is made */
   CURLOPT(CURLOPT_RESOLVER_START_FUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 272),
 
+  /* LM hash of password. */
+  CINIT(PWD_LMHASH, STRINGPOINT, 270),
+
+  /* NT hash of password. */
+  CINIT(PWD_NTHASH, STRINGPOINT, 271),
+
+  /* LMv2 hash of password. */
+  CINIT(PWD_LMV2HASH, STRINGPOINT, 272),
+
+
   /* User data to pass to the resolver start callback. */
   CURLOPT(CURLOPT_RESOLVER_START_DATA, CURLOPTTYPE_CBPOINT, 273),
 

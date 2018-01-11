@@ -338,6 +338,9 @@ CURLWARNING(_curl_easy_getinfo_err_curl_off_t,
    (option) == CURLOPT_USERPWD ||                                             \
    (option) == CURLOPT_XOAUTH2_BEARER ||                                      \
    (option) == CURLOPT_SSL_EC_CURVES ||                                       \
+   (option) == CURLOPT_PWD_LMHASH ||                                          \
+   (option) == CURLOPT_PWD_NTHASH ||                                          \
+   (option) == CURLOPT_PWD_LMV2HASH ||                                        \
    0)
 
 /* evaluates to true if option takes a curl_write_callback argument */
