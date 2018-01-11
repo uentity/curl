@@ -530,6 +530,7 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
   size_t hostlen = 0;
   size_t userlen = 0;
   size_t domlen = 0;
+  size_t passlen = 0;
 
   user = strchr(userp, '\\');
   if(!user)
@@ -555,8 +556,17 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     hostlen = strlen(host);
   }
 
+  passlen = strlen(passwdp);
+
+  bool usingNtlm_v2 = false;
+
+  if (passlen > 0)
+	  usingNtlm_v2 = true;
+  else if (data->easy_conn->bits.passwd_lmv2hash && data->easy_conn->bits.passwd_nthash)
+	  usingNtlm_v2 = true;
+
 #if defined(USE_NTRESPONSES) && defined(USE_NTLM_V2)
-  if(ntlm->target_info_len) {
+  if(ntlm->target_info_len && usingNtlm_v2) {
     unsigned char ntbuffer[0x18];
     unsigned char entropy[8];
     unsigned char ntlmv2hash[0x18];
@@ -565,28 +575,49 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     if(result)
       return result;
 
-    result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
-    if(result)
-      return result;
+	if (data->easy_conn->bits.passwd_nthash && data->easy_conn->bits.passwd_lmv2hash) {
+		if (strlen(data->easy_conn->passwd_nthash) < 16)
+			return CURLE_OUT_OF_MEMORY;
+		else {
+			memcpy(ntbuffer, data->easy_conn->passwd_nthash, 16);
+			memset(ntbuffer + 16, 0, 21 - 16);
+		}
 
-    result = Curl_ntlm_core_mk_ntlmv2_hash(user, userlen, domain, domlen,
-                                           ntbuffer, ntlmv2hash);
-    if(result)
-      return result;
+		if (strlen(data->easy_conn->passwd_lmv2hash) < 16)
+			return CURLE_OUT_OF_MEMORY;
+		else {
+			memcpy(ntlmv2hash, data->easy_conn->passwd_lmv2hash, 16);
+			memset(ntlmv2hash + 16, 0, 21 - 16);
+		}
+	}
+	else if (passwdp) {
+		result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
 
-    /* LMv2 response */
-    result = Curl_ntlm_core_mk_lmv2_resp(ntlmv2hash, entropy,
-                                         &ntlm->nonce[0], lmresp);
-    if(result)
-      return result;
+		if (result)
+			return result;
 
-    /* NTLMv2 response */
-    result = Curl_ntlm_core_mk_ntlmv2_resp(ntlmv2hash, entropy,
-                                           ntlm, &ntlmv2resp, &ntresplen);
-    if(result)
-      return result;
+		result = Curl_ntlm_core_mk_ntlmv2_hash(user, userlen, domain, domlen,
+			ntbuffer, ntlmv2hash);
 
-    ptr_ntresp = ntlmv2resp;
+		if (result)
+			return result;
+	}
+	else
+		return CURLE_OUT_OF_MEMORY;
+
+	/* LMv2 response */
+	result = Curl_ntlm_core_mk_lmv2_resp(ntlmv2hash, entropy,
+		&ntlm->nonce[0], lmresp);
+	if (result)
+		return result;
+
+	/* NTLMv2 response */
+	result = Curl_ntlm_core_mk_ntlmv2_resp(ntlmv2hash, entropy,
+		ntlm, &ntlmv2resp, &ntresplen);
+	if (result)
+		return result;
+
+	ptr_ntresp = ntlmv2resp;
   }
   else
 #endif
@@ -615,11 +646,20 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     memcpy(tmp + 8, entropy, 8);
 
     result = Curl_ssl_md5sum(tmp, 16, md5sum, MD5_DIGEST_LENGTH);
-    if(!result)
-      /* We shall only use the first 8 bytes of md5sum, but the des code in
-         Curl_ntlm_core_lm_resp only encrypt the first 8 bytes */
-      result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
-    if(result)
+	if (!result) {
+		/* We shall only use the first 8 bytes of md5sum, but the des code in
+		   Curl_ntlm_core_lm_resp only encrypt the first 8 bytes */
+		if (data->easy_conn->bits.passwd_nthash)
+			if (strlen(data->easy_conn->passwd_nthash) < 16)
+				return CURLE_OUT_OF_MEMORY;
+			else {
+				memcpy(ntbuffer, data->easy_conn->passwd_nthash, 16);
+				memset(ntbuffer + 16, 0, 21 - 16);
+			}
+		else
+			result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
+	}
+	 if(result)
       return result;
 
     Curl_ntlm_core_lm_resp(ntbuffer, md5sum, ntresp);
@@ -637,14 +677,29 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     unsigned char lmbuffer[0x18];
 
 #ifdef USE_NTRESPONSES
-    result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
-    if(result)
-      return result;
+
+	if (data->easy_conn->bits.passwd_nthash)
+		if (strlen(data->easy_conn->passwd_nthash) < 16)
+			return CURLE_OUT_OF_MEMORY;
+		else {
+			memcpy(ntbuffer, data->easy_conn->passwd_nthash, 16);
+			memset(ntbuffer + 16, 0, 21 - 16);
+		}
+	else
+		result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
 
     Curl_ntlm_core_lm_resp(ntbuffer, &ntlm->nonce[0], ntresp);
 #endif
+	if (data->easy_conn->bits.passwd_lmhash)
+		if (strlen(data->easy_conn->passwd_lmhash) < 16)
+			return CURLE_OUT_OF_MEMORY;
+		else {
+			memcpy(lmbuffer, data->easy_conn->passwd_lmhash, 16);
+			memset(lmbuffer + 16, 0, 21 - 16);
+		}
+	else
+		result = Curl_ntlm_core_mk_lm_hash(data, passwdp, lmbuffer);
 
-    result = Curl_ntlm_core_mk_lm_hash(data, passwdp, lmbuffer);
     if(result)
       return result;
 

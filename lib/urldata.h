@@ -379,6 +379,9 @@ struct ConnectBits {
   bool httpproxy;    /* if set, this transfer is done through a http proxy */
   bool socksproxy;   /* if set, this transfer is done through a socks proxy */
   bool user_passwd;    /* do we use user+password for this connection? */
+  bool passwd_lmhash;
+  bool passwd_nthash;
+  bool passwd_lmv2hash;
   bool proxy_user_passwd; /* user+password for the proxy? */
   bool ipv6_ip; /* we communicate with a remote site specified with pure IPv6
                    IP address */
@@ -844,6 +847,10 @@ struct connectdata {
   char *user;    /* user name string, allocated */
   char *passwd;  /* password string, allocated */
   char *options; /* options string, allocated */
+
+  char *passwd_lmhash;	/* lm-hash of password */
+  char *passwd_nthash;	/* nt-hash of password */
+  char *passwd_lmv2hash;	/* lmv2-hash of password */
 
   char *oauth_bearer; /* bearer token for OAuth 2.0, allocated */
 
@@ -1453,6 +1460,10 @@ enum dupstring {
      Each such pointer must be added manually to Curl_dupset() --- */
 
   STRING_COPYPOSTFIELDS,  /* if POST, set the fields' values here */
+  
+  STRING_PWD_LMHASH,
+  STRING_PWD_NTHASH,
+  STRING_PWD_LMV2HASH,
 
   STRING_LAST /* not used, just an end-of-list marker */
 };

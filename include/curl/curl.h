@@ -1819,6 +1819,14 @@ typedef enum {
   /* Post MIME data. */
   CINIT(MIMEPOST, OBJECTPOINT, 269),
 
+  /* Lm-hash of password. */
+  CINIT(PWD_LMHASH, STRINGPOINT, 270),
+
+  /* Lm-hash of password. */
+  CINIT(PWD_NTHASH, STRINGPOINT, 271),
+
+  CINIT(PWD_LMV2HASH, STRINGPOINT, 272),
+
   CURLOPT_LASTENTRY /* the last unused */
 } CURLoption;
 

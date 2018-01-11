@@ -3903,6 +3903,29 @@ static CURLcode resolve_server(struct Curl_easy *data,
   return result;
 }
 
+static CURLcode set_ntlm_hashes(struct Curl_easy *data,
+	struct connectdata *conn)
+{
+	CURLcode result = CURLE_OK;
+
+	if (!conn->bits.passwd_lmhash && data->set.str[STRING_PWD_LMHASH]) {
+		conn->passwd_lmhash = strdup(data->set.str[STRING_PWD_LMHASH]);
+		conn->bits.passwd_lmhash = TRUE;
+	}
+
+	if (!conn->bits.passwd_nthash && data->set.str[STRING_PWD_NTHASH]) {
+		conn->passwd_nthash = strdup(data->set.str[STRING_PWD_NTHASH]);
+		conn->bits.passwd_nthash = TRUE;
+	}
+
+	if (!conn->bits.passwd_lmv2hash && data->set.str[STRING_PWD_LMV2HASH]) {
+		conn->passwd_lmv2hash = strdup(data->set.str[STRING_PWD_LMV2HASH]);
+		conn->bits.passwd_lmv2hash = TRUE;
+	}
+
+	return result;
+}
+
 /*
  * Cleanup the connection just allocated before we can move along and use the
  * previously existing one.  All relevant data is copied over and old_conn is
@@ -3935,6 +3958,38 @@ static void reuse_conn(struct connectdata *old_conn,
     conn->passwd = old_conn->passwd;
     old_conn->user = NULL;
     old_conn->passwd = NULL;
+  }
+
+  conn->bits.user_passwd = old_conn->bits.user_passwd;
+  if (conn->bits.user_passwd) {
+	  /* use the new user name and password though */
+	  Curl_safefree(conn->user);
+	  Curl_safefree(conn->passwd);
+	  conn->user = old_conn->user;
+	  conn->passwd = old_conn->passwd;
+	  old_conn->user = NULL;
+	  old_conn->passwd = NULL;
+  }
+
+  conn->bits.passwd_lmhash = old_conn->bits.passwd_lmhash;
+  if (conn->bits.passwd_lmhash) {
+	  Curl_safefree(conn->passwd_lmhash);
+	  conn->passwd_lmhash = old_conn->passwd_lmhash;
+	  old_conn->passwd_lmhash = NULL;
+  }
+
+  conn->bits.passwd_nthash = old_conn->bits.passwd_nthash;
+  if (conn->bits.passwd_nthash) {
+	  Curl_safefree(conn->passwd_nthash);
+	  conn->passwd_nthash = old_conn->passwd_nthash;
+	  old_conn->passwd_nthash = NULL;
+  }
+
+  conn->bits.passwd_lmv2hash = old_conn->bits.passwd_lmv2hash;
+  if (conn->bits.passwd_lmv2hash) {
+	  Curl_safefree(conn->passwd_lmv2hash);
+	  conn->passwd_lmv2hash = old_conn->passwd_lmv2hash;
+	  old_conn->passwd_lmv2hash = NULL;
   }
 
   conn->bits.proxy_user_passwd = old_conn->bits.proxy_user_passwd;
@@ -4105,6 +4160,12 @@ static CURLcode create_conn(struct Curl_easy *data,
                                &options);
   if(result)
     goto out;
+
+#if defined(USE_NTLM)
+  result = set_ntlm_hashes(data, conn);
+  if (result)
+	  goto out;
+#endif
 
   /*************************************************************
    * No protocol part in URL was used, add it!
