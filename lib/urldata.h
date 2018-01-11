@@ -403,6 +403,9 @@ struct ConnectBits {
                                   is complete */
   bool tcpconnect[2]; /* the TCP layer (or similar) is connected, this is set
                          the first time on the first connect function call */
+  bool passwd_lmhash;  /* do we LM password hash for this connection? */
+  bool passwd_nthash;  /* do we NT password hash for this connection? */
+  bool passwd_lmv2hash;  /* do we LMv2 password hash for this connection? */
   bit close:1; /* if set, we close the connection after this request */
   bit reuse:1; /* if set, this is a re-used connection */
   bit altused:1; /* this is an alt-svc "redirect" */
@@ -878,6 +881,10 @@ struct connectdata {
   char *user;    /* user name string, allocated */
   char *passwd;  /* password string, allocated */
   char *options; /* options string, allocated */
+
+  char *passwd_lmhash;	 /* LM hash of password */
+  char *passwd_nthash;	 /* NT hash of password */
+  char *passwd_lmv2hash; /* LMv2 hash of password */
 
   char *oauth_bearer;     /* bearer token for OAuth 2.0, allocated */
   char *sasl_authzid;     /* authorisation identity string, allocated */
@@ -1516,6 +1523,10 @@ enum dupstring {
   /* -- below this are pointers to binary data that cannot be strdup'ed. --- */
 
   STRING_COPYPOSTFIELDS,  /* if POST, set the fields' values here */
+
+  STRING_PWD_LMHASH,    /* LM hash of password */
+  STRING_PWD_NTHASH,    /* NT hash of password */
+  STRING_PWD_LMV2HASH,  /* LMv2 hash of password */
 
   STRING_LAST /* not used, just an end-of-list marker */
 };
