@@ -3270,6 +3270,25 @@ static CURLcode resolve_server(struct Curl_easy *data,
   return result;
 }
 
+static void set_ntlm_hashes(struct Curl_easy *data,
+                                struct connectdata *conn)
+{
+  if(!conn->bits.passwd_lmhash && data->set.str[STRING_PWD_LMHASH]) {
+	conn->passwd_lmhash = strdup(data->set.str[STRING_PWD_LMHASH]);
+	conn->bits.passwd_lmhash = TRUE;
+  }
+
+  if(!conn->bits.passwd_nthash && data->set.str[STRING_PWD_NTHASH]) {
+	conn->passwd_nthash = strdup(data->set.str[STRING_PWD_NTHASH]);
+	conn->bits.passwd_nthash = TRUE;
+  }
+
+  if(!conn->bits.passwd_lmv2hash && data->set.str[STRING_PWD_LMV2HASH]) {
+	conn->passwd_lmv2hash = strdup(data->set.str[STRING_PWD_LMV2HASH]);
+	conn->bits.passwd_lmv2hash = TRUE;
+  }
+}
+
 /*
  * Cleanup the connection just allocated before we can move along and use the
  * previously existing one.  All relevant data is copied over and old_conn is
@@ -3303,6 +3322,30 @@ static void reuse_conn(struct connectdata *old_conn,
     conn->passwd = old_conn->passwd;
     old_conn->user = NULL;
     old_conn->passwd = NULL;
+  }
+
+  /* similarly copy LM hash from old_conn */
+  conn->bits.passwd_lmhash = old_conn->bits.passwd_lmhash;
+  if(conn->bits.passwd_lmhash) {
+	Curl_safefree(conn->passwd_lmhash);
+	conn->passwd_lmhash = old_conn->passwd_lmhash;
+	old_conn->passwd_lmhash = NULL;
+  }
+
+  /* ... and NT hash */
+  conn->bits.passwd_nthash = old_conn->bits.passwd_nthash;
+  if(conn->bits.passwd_nthash) {
+	Curl_safefree(conn->passwd_nthash);
+	conn->passwd_nthash = old_conn->passwd_nthash;
+	old_conn->passwd_nthash = NULL;
+  }
+
+  /* ... and LMv2 hash */
+  conn->bits.passwd_lmv2hash = old_conn->bits.passwd_lmv2hash;
+  if(conn->bits.passwd_lmv2hash) {
+	Curl_safefree(conn->passwd_lmv2hash);
+	conn->passwd_lmv2hash = old_conn->passwd_lmv2hash;
+	old_conn->passwd_lmv2hash = NULL;
   }
 
 #ifndef CURL_DISABLE_PROXY
@@ -3422,6 +3465,10 @@ static CURLcode create_conn(struct Curl_easy *data,
   result = parseurlandfillconn(data, conn);
   if(result)
     goto out;
+
+#if defined(USE_NTLM)
+  set_ntlm_hashes(data, conn);
+#endif
 
   if(data->set.str[STRING_SASL_AUTHZID]) {
     conn->sasl_authzid = strdup(data->set.str[STRING_SASL_AUTHZID]);
