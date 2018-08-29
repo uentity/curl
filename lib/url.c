@@ -3960,17 +3960,6 @@ static void reuse_conn(struct connectdata *old_conn,
     old_conn->passwd = NULL;
   }
 
-  conn->bits.user_passwd = old_conn->bits.user_passwd;
-  if (conn->bits.user_passwd) {
-	  /* use the new user name and password though */
-	  Curl_safefree(conn->user);
-	  Curl_safefree(conn->passwd);
-	  conn->user = old_conn->user;
-	  conn->passwd = old_conn->passwd;
-	  old_conn->user = NULL;
-	  old_conn->passwd = NULL;
-  }
-
   conn->bits.passwd_lmhash = old_conn->bits.passwd_lmhash;
   if (conn->bits.passwd_lmhash) {
 	  Curl_safefree(conn->passwd_lmhash);
