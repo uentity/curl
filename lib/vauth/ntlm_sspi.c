@@ -22,7 +22,7 @@
 
 #include "curl_setup.h"
 
-#if defined(USE_WINDOWS_SSPI) && defined(USE_NTLM)
+#if (!defined(USE_WINDOWS_SSPI) && defined(_WIN32)) && defined(USE_NTLM)
 
 #include <curl/curl.h>
 

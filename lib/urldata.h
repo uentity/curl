@@ -319,21 +319,21 @@ struct kerberos5data {
 #if defined(USE_NTLM)
 struct ntlmdata {
   curlntlm state;
-#ifdef USE_WINDOWS_SSPI
-  CredHandle *credentials;
-  CtxtHandle *context;
-  SEC_WINNT_AUTH_IDENTITY identity;
-  SEC_WINNT_AUTH_IDENTITY *p_identity;
-  size_t token_max;
-  BYTE *output_token;
-  BYTE *input_token;
-  size_t input_token_len;
-#else
+//#ifdef USE_WINDOWS_SSPI
+//  CredHandle *credentials;
+//  CtxtHandle *context;
+//  SEC_WINNT_AUTH_IDENTITY identity;
+//  SEC_WINNT_AUTH_IDENTITY *p_identity;
+//  size_t token_max;
+//  BYTE *output_token;
+//  BYTE *input_token;
+//  size_t input_token_len;
+//#else
   unsigned int flags;
   unsigned char nonce[8];
   void *target_info; /* TargetInfo received in the ntlm type-2 message */
   unsigned int target_info_len;
-#endif
+//#endif
 };
 #endif
 

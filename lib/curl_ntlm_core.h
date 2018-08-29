@@ -35,7 +35,7 @@
 #define NTLM_NEEDS_NSS_INIT
 #endif
 
-#if !defined(USE_WINDOWS_SSPI) || defined(USE_WIN32_CRYPTO)
+#if (defined(USE_WINDOWS_SSPI) || !defined(_WIN32)) || defined(USE_WIN32_CRYPTO)
 
 #ifdef USE_OPENSSL
 #  include <openssl/ssl.h>
@@ -74,7 +74,7 @@ CURLcode Curl_ntlm_core_mk_nt_hash(struct Curl_easy *data,
                                    const char *password,
                                    unsigned char *ntbuffer /* 21 bytes */);
 
-#if defined(USE_NTLM_V2) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM_V2) && (defined(USE_WINDOWS_SSPI) || !defined(_WIN32))
 
 CURLcode Curl_hmac_md5(const unsigned char *key, unsigned int keylen,
                        const unsigned char *data, unsigned int datalen,

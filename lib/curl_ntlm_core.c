@@ -50,7 +50,7 @@
      in NTLM type-3 messages.
  */
 
-#if !defined(USE_WINDOWS_SSPI) || defined(USE_WIN32_CRYPTO)
+#if (defined(USE_WINDOWS_SSPI) || !defined(_WIN32)) || defined(USE_WIN32_CRYPTO)
 
 #ifdef USE_OPENSSL
 
@@ -534,7 +534,7 @@ static void ascii_to_unicode_le(unsigned char *dest, const char *src,
   }
 }
 
-#if defined(USE_NTLM_V2) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM_V2) && (defined(USE_WINDOWS_SSPI) || !defined(_WIN32))
 
 static void ascii_uppercase_to_unicode_le(unsigned char *dest,
                                           const char *src, size_t srclen)
@@ -546,7 +546,7 @@ static void ascii_uppercase_to_unicode_le(unsigned char *dest,
   }
 }
 
-#endif /* USE_NTLM_V2 && !USE_WINDOWS_SSPI */
+#endif /* USE_NTLM_V2 && USE_WINDOWS_SSPI */
 
 /*
  * Set up nt hashed passwords
@@ -625,7 +625,7 @@ CURLcode Curl_ntlm_core_mk_nt_hash(struct Curl_easy *data,
   return CURLE_OK;
 }
 
-#if defined(USE_NTLM_V2) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM_V2) && (defined(USE_WINDOWS_SSPI) || !defined(_WIN32))
 
 /* This returns the HMAC MD5 digest */
 CURLcode Curl_hmac_md5(const unsigned char *key, unsigned int keylen,
