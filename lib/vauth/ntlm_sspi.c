@@ -22,7 +22,7 @@
 
 #include "curl_setup.h"
 
-#if defined(USE_WINDOWS_SSPI) && defined(USE_NTLM)
+#if defined(USE_WINDOWS_SSPI) && defined(USE_NTLM) && !defined(USE_OPENSSL_NTLM)
 
 #include <curl/curl.h>
 
@@ -378,4 +378,4 @@ void Curl_auth_cleanup_ntlm(struct ntlmdata *ntlm)
   Curl_safefree(ntlm->spn);
 }
 
-#endif /* USE_WINDOWS_SSPI && USE_NTLM */
+#endif /* USE_WINDOWS_SSPI && USE_NTLM && !USE_OPENSSL_NTLM */
