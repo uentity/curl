@@ -346,7 +346,7 @@ struct kerberos5data {
 /* Struct used for NTLM challenge-response authentication */
 #if defined(USE_NTLM)
 struct ntlmdata {
-#ifdef USE_WINDOWS_SSPI
+#if defined(USE_WINDOWS_SSPI) && !defined(USE_OPENSSL_NTLM)
 /* The sslContext is used for the Schannel bindings. The
  * api is available on the Windows 7 SDK and later.
  */
