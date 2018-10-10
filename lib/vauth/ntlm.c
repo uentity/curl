@@ -22,7 +22,7 @@
 
 #include "curl_setup.h"
 
-#if defined(USE_NTLM) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM) && (!defined(USE_WINDOWS_SSPI) || defined(USE_OPENSSL_NTLM))
 
 /*
  * NTLM details:
@@ -922,4 +922,4 @@ void Curl_auth_cleanup_ntlm(struct ntlmdata *ntlm)
   ntlm->target_info_len = 0;
 }
 
-#endif /* USE_NTLM && !USE_WINDOWS_SSPI */
+#endif /* USE_NTLM && (!USE_WINDOWS_SSPI || USE_OPENSSL_NTLM) */

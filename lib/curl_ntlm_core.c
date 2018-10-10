@@ -514,7 +514,7 @@ static void ascii_to_unicode_le(unsigned char *dest, const char *src,
   }
 }
 
-#if defined(USE_NTLM_V2) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM_V2) && (!defined(USE_WINDOWS_SSPI) || defined(USE_OPENSSL_NTLM))
 
 static void ascii_uppercase_to_unicode_le(unsigned char *dest,
                                           const char *src, size_t srclen)
@@ -526,7 +526,7 @@ static void ascii_uppercase_to_unicode_le(unsigned char *dest,
   }
 }
 
-#endif /* USE_NTLM_V2 && !USE_WINDOWS_SSPI */
+#endif /* USE_NTLM_V2 && (!USE_WINDOWS_SSPI || USE_OPENSSL_NTLM) */
 
 /*
  * Set up nt hashed passwords
@@ -565,7 +565,7 @@ CURLcode Curl_ntlm_core_mk_nt_hash(struct Curl_easy *data,
   return CURLE_OK;
 }
 
-#if defined(USE_NTLM_V2) && !defined(USE_WINDOWS_SSPI)
+#if defined(USE_NTLM_V2) && (!defined(USE_WINDOWS_SSPI) || defined(USE_OPENSSL_NTLM))
 
 /* This creates the NTLMv2 hash by using NTLM hash as the key and Unicode
  * (uppercase UserName + Domain) as the data
@@ -734,8 +734,8 @@ CURLcode  Curl_ntlm_core_mk_lmv2_resp(unsigned char *ntlmv2hash,
   return result;
 }
 
-#endif /* USE_NTLM_V2 && !USE_WINDOWS_SSPI */
+#endif /* USE_NTLM_V2 && (!USE_WINDOWS_SSPI || USE_OPENSSL_NTLM) */
 
 #endif /* USE_NTRESPONSES */
 
-#endif /* USE_CURL_NTLM_CORE */
+#endif /* !USE_WINDOWS_SSPI || USE_WIN32_CRYPTO || USE_OPENSSL_NTLM*/
