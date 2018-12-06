@@ -172,7 +172,7 @@ CURLcode Curl_output_ntlm(struct connectdata *conn, bool proxy)
   if(!passwdp)
     passwdp = "";
 
-#ifdef USE_WINDOWS_SSPI
+#if defined(USE_WINDOWS_SSPI) && !defined(USE_OPENSSL_NTLM)
   if(s_hSecDll == NULL) {
     /* not thread safe and leaks - use curl_global_init() to avoid */
     CURLcode err = Curl_sspi_global_init();
