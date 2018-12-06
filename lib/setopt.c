@@ -1353,24 +1353,36 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
 	  /*
 	  * LM hash of password for ntlm auth
 	  */
-	  result = Curl_setstropt(&data->set.str[STRING_PWD_LMHASH],
-                              va_arg(param, char *));
+      ;
+      char **lmhash = &data->set.str[STRING_PWD_LMHASH];
+      if (!*lmhash) *lmhash = malloc(21);
+      if (!*lmhash) return CURLE_OUT_OF_MEMORY;
+      memcpy(*lmhash, va_arg(param, char *), 16);
+      return CURLE_OK;
 	  break;
 
   case CURLOPT_PWD_NTHASH:
 	  /*
 	  * NT hash of password for ntlm auth
 	  */
-	  result = Curl_setstropt(&data->set.str[STRING_PWD_NTHASH],
-                              va_arg(param, char *));
+      ;
+      char **nthash = &data->set.str[STRING_PWD_NTHASH];
+      if (!*nthash) *nthash = malloc(21);
+      if (!*nthash) return CURLE_OUT_OF_MEMORY;
+      memcpy(*nthash, va_arg(param, char *), 16);
+      return CURLE_OK;
 	  break;
 
   case CURLOPT_PWD_LMV2HASH:
 	  /*
 	  * LMv2 hash of password for ntlm auth
 	  */
-	  result = Curl_setstropt(&data->set.str[STRING_PWD_LMV2HASH],
-                              va_arg(param, char *));
+      ;
+      char **lmv2hash = &data->set.str[STRING_PWD_LMV2HASH];
+      if (!*lmv2hash) *lmv2hash = malloc(21);
+      if (!*lmv2hash) return CURLE_OUT_OF_MEMORY;
+      memcpy(*lmv2hash, va_arg(param, char *), 16);
+      return CURLE_OK;
 	  break;
 
   case CURLOPT_USERNAME:
