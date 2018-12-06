@@ -183,8 +183,7 @@ static CURLcode ntlm_decode_type2_target(struct Curl_easy *data,
     target_info_len = Curl_read16_le(&buffer[40]);
     target_info_offset = Curl_read32_le(&buffer[44]);
     if(target_info_len > 0) {
-      if((target_info_offset >= size) ||
-         ((target_info_offset + target_info_len) > size) ||
+      if(((target_info_offset + target_info_len) > size) ||
          (target_info_offset < 48)) {
         infof(data, "NTLM handshake failure (bad type-2 message). "
               "Target Info Offset Len is set incorrect by the peer\n");
@@ -573,7 +572,7 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     usingNtlm_v2 = true;
 
 #if defined(USE_NTRESPONSES) && defined(USE_NTLM_V2)
-  if((ntlm->flags & NTLMFLAG_NEGOTIATE_NTLM2_KEY) && usingNtlm_v2) {
+  if(ntlm->target_info_len && usingNtlm_v2) {
     unsigned char ntbuffer[0x18];
     unsigned char entropy[8];
     unsigned char ntlmv2hash[0x18];
@@ -583,19 +582,11 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
       return result;
 
     if(data->conn->bits.passwd_nthash && data->conn->bits.passwd_lmv2hash) {
-      if(strlen(data->conn->passwd_nthash) < 16)
-        return CURLE_OUT_OF_MEMORY;
-      else {
-        memcpy(ntbuffer, data->conn->passwd_nthash, 16);
-        memset(ntbuffer + 16, 0, 21 - 16);
-      }
+      memcpy(ntbuffer, data->conn->passwd_nthash, 16);
+      memset(ntbuffer + 16, 0, 21 - 16);
 
-      if(strlen(data->conn->passwd_lmv2hash) < 16)
-        return CURLE_OUT_OF_MEMORY;
-      else {
-        memcpy(ntlmv2hash, data->conn->passwd_lmv2hash, 16);
-        memset(ntlmv2hash + 16, 0, 21 - 16);
-      }
+      memcpy(ntlmv2hash, data->conn->passwd_lmv2hash, 16);
+      memset(ntlmv2hash + 16, 0, 21 - 16);
     }
     else if(passwdp) {
       result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
@@ -632,7 +623,7 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
 #define CURL_MD5_DIGEST_LENGTH 16 /* fixed size */
 
   /* We don't support NTLM2 if we don't have USE_NTRESPONSES */
-  if(ntlm->flags & NTLMFLAG_NEGOTIATE_NTLM_KEY) {
+  if(ntlm->flags & NTLMFLAG_NEGOTIATE_NTLM2_KEY) {
     unsigned char ntbuffer[0x18];
     unsigned char tmp[0x18];
     unsigned char md5sum[CURL_MD5_DIGEST_LENGTH];
@@ -657,14 +648,10 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     if (!result) {
     /* We shall only use the first 8 bytes of md5sum, but the des code in
        Curl_ntlm_core_lm_resp only encrypt the first 8 bytes */
-      if(data->conn->bits.passwd_nthash)
-        if(strlen(data->conn->passwd_nthash) < 16)
-          return CURLE_OUT_OF_MEMORY;
-        else {
-          memcpy(ntbuffer, data->conn->passwd_nthash, 16);
-          memset(ntbuffer + 16, 0, 21 - 16);
-        }
-      else
+      if(data->conn->bits.passwd_nthash) {
+        memcpy(ntbuffer, data->conn->passwd_nthash, 16);
+        memset(ntbuffer + 16, 0, 21 - 16);
+      } else
         result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
     }
     if(result)
@@ -687,26 +674,18 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     unsigned char lmbuffer[0x18];
 
 #ifdef USE_NTRESPONSES
-    if(data->conn->bits.passwd_nthash)
-      if(strlen(data->conn->passwd_nthash) < 16)
-        return CURLE_OUT_OF_MEMORY;
-      else {
-        memcpy(ntbuffer, data->conn->passwd_nthash, 16);
-        memset(ntbuffer + 16, 0, 21 - 16);
-      }
-    else
+    if(data->conn->bits.passwd_nthash) {
+      memcpy(ntbuffer, data->conn->passwd_nthash, 16);
+      memset(ntbuffer + 16, 0, 21 - 16);
+    } else
       result = Curl_ntlm_core_mk_nt_hash(data, passwdp, ntbuffer);
 
     Curl_ntlm_core_lm_resp(ntbuffer, &ntlm->nonce[0], ntresp);
 #endif
-    if(data->conn->bits.passwd_lmhash)
-      if(strlen(data->conn->passwd_lmhash) < 16)
-        return CURLE_OUT_OF_MEMORY;
-      else {
-        memcpy(lmbuffer, data->conn->passwd_lmhash, 16);
-        memset(lmbuffer + 16, 0, 21 - 16);
-      }
-    else
+    if(data->conn->bits.passwd_lmhash) {
+      memcpy(lmbuffer, data->conn->passwd_lmhash, 16);
+      memset(lmbuffer + 16, 0, 21 - 16);
+    } else
       result = Curl_ntlm_core_mk_lm_hash(data, passwdp, lmbuffer);
     if(result)
       return result;
@@ -833,14 +812,11 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
   });
 
 #ifdef USE_NTRESPONSES
-  /* ntresplen + size should not be risking an integer overflow here */
-  if(ntresplen + size > sizeof(ntlmbuf)) {
-    failf(data, "incoming NTLM message too big");
-    return CURLE_OUT_OF_MEMORY;
+  if(size < (NTLM_BUFSIZE - ntresplen)) {
+    DEBUGASSERT(size == (size_t)ntrespoff);
+    memcpy(&ntlmbuf[size], ptr_ntresp, ntresplen);
+    size += ntresplen;
   }
-  DEBUGASSERT(size == (size_t)ntrespoff);
-  memcpy(&ntlmbuf[size], ptr_ntresp, ntresplen);
-  size += ntresplen;
 
   DEBUG_OUT({
     fprintf(stderr, "\n   ntresp=");

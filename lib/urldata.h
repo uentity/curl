@@ -985,9 +985,9 @@ struct connectdata {
   char *passwd;  /* password string, allocated */
   char *options; /* options string, allocated */
 
-  char *passwd_lmhash;	 /* LM hash of password */
-  char *passwd_nthash;	 /* NT hash of password */
-  char *passwd_lmv2hash; /* LMv2 hash of password */
+  char *passwd_lmhash[21];	 /* LM hash of password */
+  char *passwd_nthash[21];	 /* NT hash of password */
+  char *passwd_lmv2hash[21]; /* LMv2 hash of password */
 
   char *sasl_authzid;     /* authorisation identity string, allocated */
 
