@@ -3189,17 +3189,17 @@ static void set_ntlm_hashes(struct Curl_easy *data,
                                 struct connectdata *conn)
 {
   if(!conn->bits.passwd_lmhash && data->set.str[STRING_PWD_LMHASH]) {
-	conn->passwd_lmhash = strdup(data->set.str[STRING_PWD_LMHASH]);
+    memcpy(conn->passwd_lmhash, data->set.str[STRING_PWD_LMHASH], 21);
 	conn->bits.passwd_lmhash = TRUE;
   }
 
   if(!conn->bits.passwd_nthash && data->set.str[STRING_PWD_NTHASH]) {
-	conn->passwd_nthash = strdup(data->set.str[STRING_PWD_NTHASH]);
+    memcpy(conn->passwd_nthash, data->set.str[STRING_PWD_NTHASH], 21);
 	conn->bits.passwd_nthash = TRUE;
   }
 
   if(!conn->bits.passwd_lmv2hash && data->set.str[STRING_PWD_LMV2HASH]) {
-	conn->passwd_lmv2hash = strdup(data->set.str[STRING_PWD_LMV2HASH]);
+    memcpy(conn->passwd_lmv2hash, data->set.str[STRING_PWD_LMV2HASH], 21);
 	conn->bits.passwd_lmv2hash = TRUE;
   }
 }
@@ -3240,27 +3240,18 @@ static void reuse_conn(struct connectdata *old_conn,
 
   /* similarly copy LM hash from old_conn */
   conn->bits.passwd_lmhash = old_conn->bits.passwd_lmhash;
-  if(conn->bits.passwd_lmhash) {
-	Curl_safefree(conn->passwd_lmhash);
-	conn->passwd_lmhash = old_conn->passwd_lmhash;
-	old_conn->passwd_lmhash = NULL;
-  }
+  if(conn->bits.passwd_lmhash)
+    memcpy(conn->passwd_lmhash, old_conn->passwd_lmhash, 21);
 
   /* ... and NT hash */
   conn->bits.passwd_nthash = old_conn->bits.passwd_nthash;
-  if(conn->bits.passwd_nthash) {
-	Curl_safefree(conn->passwd_nthash);
-	conn->passwd_nthash = old_conn->passwd_nthash;
-	old_conn->passwd_nthash = NULL;
-  }
+  if(conn->bits.passwd_nthash)
+    memcpy(conn->passwd_nthash, old_conn->passwd_nthash, 21);
 
   /* ... and LMv2 hash */
   conn->bits.passwd_lmv2hash = old_conn->bits.passwd_lmv2hash;
-  if(conn->bits.passwd_lmv2hash) {
-	Curl_safefree(conn->passwd_lmv2hash);
-	conn->passwd_lmv2hash = old_conn->passwd_lmv2hash;
-	old_conn->passwd_lmv2hash = NULL;
-  }
+  if(conn->bits.passwd_lmv2hash)
+    memcpy(conn->passwd_lmv2hash, old_conn->passwd_lmv2hash, 21);
 
   conn->bits.proxy_user_passwd = old_conn->bits.proxy_user_passwd;
   if(conn->bits.proxy_user_passwd) {
