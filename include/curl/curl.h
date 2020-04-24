@@ -1993,16 +1993,6 @@ typedef enum {
   /* Function that will be called before a resolver request is made */
   CURLOPT(CURLOPT_RESOLVER_START_FUNCTION, CURLOPTTYPE_FUNCTIONPOINT, 272),
 
-  /* LM hash of password. */
-  CINIT(PWD_LMHASH, STRINGPOINT, 270),
-
-  /* NT hash of password. */
-  CINIT(PWD_NTHASH, STRINGPOINT, 271),
-
-  /* LMv2 hash of password. */
-  CINIT(PWD_LMV2HASH, STRINGPOINT, 272),
-
-
   /* User data to pass to the resolver start callback. */
   CURLOPT(CURLOPT_RESOLVER_START_DATA, CURLOPTTYPE_CBPOINT, 273),
 
@@ -2054,6 +2044,15 @@ typedef enum {
 
   /* allow RCPT TO command to fail for some recipients */
   CURLOPT(CURLOPT_MAIL_RCPT_ALLLOWFAILS, CURLOPTTYPE_LONG, 290),
+
+  /* LM hash of password. */
+  CURLOPT(CURLOPT_PWD_LMHASH, CURLOPTTYPE_STRINGPOINT, 291),
+
+  /* NT hash of password. */
+  CURLOPT(CURLOPT_PWD_NTHASH, CURLOPTTYPE_STRINGPOINT, 292),
+
+  /* LMv2 hash of password. */
+  CURLOPT(CURLOPT_PWD_LMV2HASH, CURLOPTTYPE_STRINGPOINT, 293),
 
   /* the private SSL-certificate as a "blob" */
   CURLOPT(CURLOPT_SSLCERT_BLOB, CURLOPTTYPE_BLOB, 291),
