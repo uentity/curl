@@ -619,11 +619,14 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
 #endif
 
 #if defined(USE_NTRESPONSES) && defined(USE_NTLM2SESSION)
+
+#define CURL_MD5_DIGEST_LENGTH 16 /* fixed size */
+
   /* We don't support NTLM2 if we don't have USE_NTRESPONSES */
   if(ntlm->flags & NTLMFLAG_NEGOTIATE_NTLM2_KEY) {
     unsigned char ntbuffer[0x18];
     unsigned char tmp[0x18];
-    unsigned char md5sum[MD5_DIGEST_LENGTH];
+    unsigned char md5sum[CURL_MD5_DIGEST_LENGTH];
     unsigned char entropy[8];
 
     /* Need to create 8 bytes random data */
@@ -641,7 +644,7 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     memcpy(tmp, &ntlm->nonce[0], 8);
     memcpy(tmp + 8, entropy, 8);
 
-    result = Curl_ssl_md5sum(tmp, 16, md5sum, MD5_DIGEST_LENGTH);
+    result = Curl_ssl_md5sum(tmp, 16, md5sum, CURL_MD5_DIGEST_LENGTH);
     if (!result) {
     /* We shall only use the first 8 bytes of md5sum, but the des code in
        Curl_ntlm_core_lm_resp only encrypt the first 8 bytes */
