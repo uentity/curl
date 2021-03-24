@@ -9,7 +9,7 @@
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -190,6 +190,7 @@ static CURLcode ntlm_decode_type2_target(struct Curl_easy *data,
         return CURLE_BAD_CONTENT_ENCODING;
       }
 
+      free(ntlm->target_info); /* replace any previous data */
       ntlm->target_info = malloc(target_info_len);
       if(!ntlm->target_info)
         return CURLE_OUT_OF_MEMORY;
@@ -495,7 +496,6 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
                                              const char *passwdp,
                                              struct ntlmdata *ntlm,
                                              char **outptr, size_t *outlen)
-
 {
   /* NTLM type-3 message structure:
 
@@ -644,7 +644,16 @@ CURLcode Curl_auth_create_ntlm_type3_message(struct Curl_easy *data,
     memcpy(tmp, &ntlm->nonce[0], 8);
     memcpy(tmp + 8, entropy, 8);
 
-    result = Curl_ssl_md5sum(tmp, 16, md5sum, CURL_MD5_DIGEST_LENGTH);
+    /* replacement of removed `Curl_ssl_md5sum()` */
+    struct MD5_context *MD5pw;
+    MD5pw = Curl_MD5_init(Curl_DIGEST_MD5);
+    if(!MD5pw)
+      result = CURLE_OUT_OF_MEMORY;
+    else {
+      Curl_MD5_update(MD5pw, tmp, curlx_uztoui(16));
+      Curl_MD5_final(MD5pw, md5sum);
+      result = CURLE_OK;
+    }
     if (!result) {
     /* We shall only use the first 8 bytes of md5sum, but the des code in
        Curl_ntlm_core_lm_resp only encrypt the first 8 bytes */
